@@ -157,6 +157,7 @@ public class LoginControl : MonoBehaviour
                 {
 					TitleId = AccountManager.TITLE_ID,
                     Username = screenNameObject.FindChild("InputField").GetComponent<InputField>().text,
+					DisplayName = screenNameObject.FindChild("InputField").GetComponent<InputField>().text,
                     Email = emailObject.FindChild("InputField").GetComponent<InputField>().text,
                     Password = confirmPasswordObject.FindChild("InputField").GetComponent<InputField>().text
                 };
