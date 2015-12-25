@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
+using PlayFab;
+using PlayFab.ClientModels;
 
 public class LoginControl : MonoBehaviour
 {
@@ -14,7 +16,7 @@ public class LoginControl : MonoBehaviour
 
     public float expandSpeed = 0.1f;
     public float fadeInSpeed = 0.05f;
-    public float fadeOutSpeed = 0.1f;
+    public float fadeOutSpeed = 0.15f;
 
 	private bool newAccount = false;
     private Vector3 passwordStartPosition;
@@ -27,6 +29,8 @@ public class LoginControl : MonoBehaviour
     private float confirmStartAlpha;
     private float screenNameImageStartAlpha;
     private float confirmImageStartAlpha;
+
+	private string responsePFID;
 
 	// Use this for initialization
 	void Start()
@@ -66,6 +70,7 @@ public class LoginControl : MonoBehaviour
         }
         else
         {
+			//Debug.Log (screenNameObject.FindChild ("InputField").GetComponent<InputField> ().text);
             lowerButtonsObject.FindChild("New/Text").GetComponent<Text>().text = "New Account";
             lowerButtonsObject.FindChild("Login Button/Text").GetComponent<Text>().text = "Login";
             screenNameObject.FindChild("InputField").GetComponent<InputField>().text = "";
@@ -134,17 +139,67 @@ public class LoginControl : MonoBehaviour
     }
 
 
+	bool CheckPassword()
+	{
+		// Do password checking here
+		return true;
+	}
+
+
     public void Login()
     {
-        if (newAccount)
+        if(newAccount)
         {
+            if(CheckPassword())
+            {
+				Debug.Log("Registering new user with email: "+emailObject.FindChild("InputField").GetComponent<InputField>().text);
+                RegisterPlayFabUserRequest request = new RegisterPlayFabUserRequest()
+                {
+					TitleId = AccountManager.TITLE_ID,
+                    Username = screenNameObject.FindChild("InputField").GetComponent<InputField>().text,
+                    Email = emailObject.FindChild("InputField").GetComponent<InputField>().text,
+                    Password = confirmPasswordObject.FindChild("InputField").GetComponent<InputField>().text
+                };
 
+                PlayFabClientAPI.RegisterPlayFabUser(request, (result) => {					
+					responsePFID = result.PlayFabId;
+					Debug.Log("Returned PlayFabId: "+responsePFID);
+					AccountManager.SESSION_TICKET = result.SessionTicket;
+					Debug.Log("Returned Session Ticket: "+ AccountManager.SESSION_TICKET);
+					AccountManager.SCREEN_NAME = result.Username;
+					Debug.Log("Returned Screen Name: "+ AccountManager.SCREEN_NAME);
+                }, 
+                (error) => {						
+						Debug.LogError(error.ErrorMessage+" "+error.HttpCode);
+                });
+            }
+            else
+            {
+                // Show password requirements
+            }
         }
         else
         {
+			Debug.Log("Logging in with email: "+emailObject.FindChild("InputField").GetComponent<InputField>().text);
+			LoginWithEmailAddressRequest request = new LoginWithEmailAddressRequest()
+			{
+				TitleId = AccountManager.TITLE_ID,
+				Email = emailObject.FindChild("InputField").GetComponent<InputField>().text,
+				Password = passwordObject.FindChild("InputField").GetComponent<InputField>().text
+			};
 
+			PlayFabClientAPI.LoginWithEmailAddress(request, (result) => {
+				responsePFID = result.PlayFabId;
+				Debug.Log("Returned PlayFabId: "+responsePFID);
+				AccountManager.SESSION_TICKET = result.SessionTicket;
+				Debug.Log("Returned Session Ticket: "+ AccountManager.SESSION_TICKET);
+			},
+			(error) => {
+					Debug.LogError(error.ErrorMessage+" "+error.HttpCode);
+			});
         }
     }
+
 
 
 }
