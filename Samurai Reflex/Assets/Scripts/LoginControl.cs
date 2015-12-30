@@ -216,6 +216,38 @@ public class LoginControl : MonoBehaviour
 						loginButton.SetActive(true);
 						loginText.SetActive(false);
 						lowerButtonsObject.FindChild("New").GetComponent<Button>().interactable = true;
+
+						switch(error.Error.GetHashCode())
+						{
+						case 1000:
+							messageObject.text = "Error: Invalid Inputs.";
+							messageObject.color = Color.red;
+							break;
+						case 1006:
+							messageObject.text = "Error: An account with this Email Address has already been created.";
+							messageObject.color = Color.red;
+							break;
+						case 1005:
+							messageObject.text = "Error: Invalid Email Address.";
+							messageObject.color = Color.red;
+							break;
+						case 1009:
+							messageObject.text = "Error: An account with this Screen Name has already been created.";
+							messageObject.color = Color.red;
+							break;
+						case 1058:
+							messageObject.text = "Error: An account with this Screen Name has already been created.";
+							messageObject.color = Color.red;
+							break;
+						case 1007:
+							messageObject.text = "Error: Invalid Screen Name.";
+							messageObject.color = Color.red;
+							break;
+						case 1008:
+							messageObject.text = "Error: Invalid Password.";
+							messageObject.color = Color.red;
+							break;
+						}
                 });
             }
             else
@@ -249,6 +281,26 @@ public class LoginControl : MonoBehaviour
 					loginButton.SetActive(true);
 					loginText.SetActive(false);
 					lowerButtonsObject.FindChild("New").GetComponent<Button>().interactable = true;
+
+					switch(error.Error.GetHashCode())
+					{
+					case 1000:
+						messageObject.text = "Error: Invalid Inputs.";
+						messageObject.color = Color.red;
+						break;
+					case 1001:
+						messageObject.text = "Error: No account with this email address exists.";
+						messageObject.color = Color.red;
+						break;
+					case 1002:
+						messageObject.text = "Error: This account has been banned.";
+						messageObject.color = Color.red;
+						break;
+					case 1142:
+						messageObject.text = "Error: Incorrect Email Address or Password.";
+						messageObject.color = Color.red;
+						break;
+					}
 			});
         }
     }
