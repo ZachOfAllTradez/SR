@@ -172,6 +172,10 @@ public class LoginControl : MonoBehaviour
                     tempColorBlock.normalColor = Color.red;
                     emailObject.FindChild("InputField").GetComponent<InputField>().colors = tempColorBlock;
 					break;
+                case 1123:
+                    messageObject.text = "Error: Cannot connect to server.";
+                    messageObject.color = Color.red;
+                    break;
 				}
 			});
     }
@@ -470,6 +474,10 @@ public class LoginControl : MonoBehaviour
 							messageObject.text = "Error: Invalid Password.";
 							messageObject.color = Color.red;
 							break;
+                        case 1123:
+                            messageObject.text = "Error: Cannot connect to server.";
+                            messageObject.color = Color.red;
+                            break;
 						}
                 });
             }
@@ -526,6 +534,10 @@ public class LoginControl : MonoBehaviour
 						messageObject.text = "Error: Incorrect Email Address or Password.";
 						messageObject.color = Color.red;
 						break;
+                    case 1123:
+                        messageObject.text = "Error: Cannot connect to server.";
+                        messageObject.color = Color.red;
+                        break;
 					}
 			});
         }
