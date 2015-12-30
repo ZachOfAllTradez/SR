@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
+using System.Text.RegularExpressions;
 using PlayFab;
 using PlayFab.ClientModels;
 
@@ -32,8 +33,13 @@ public class LoginControl : MonoBehaviour
     private float confirmStartAlpha;
     private float screenNameImageStartAlpha;
     private float confirmImageStartAlpha;
+    private ColorBlock tempColorBlock;
 
 	private string responsePFID;
+
+	private bool validScreenName = false;
+	private bool validPassword = false;
+
 
 	// Use this for initialization
 	void Start()
@@ -115,10 +121,18 @@ public class LoginControl : MonoBehaviour
 				case 1000:
 					messageObject.text = "Error: Invalid Email Address.";
 					messageObject.color = Color.red;
+
+                    tempColorBlock = emailObject.FindChild("InputField").GetComponent<InputField>().colors;
+                    tempColorBlock.normalColor = Color.red;
+                    emailObject.FindChild("InputField").GetComponent<InputField>().colors = tempColorBlock;
 					break;
 				case 1001:
 					messageObject.text = "Error: No account with this email address exists.";
 					messageObject.color = Color.red;
+
+                    tempColorBlock = emailObject.FindChild("InputField").GetComponent<InputField>().colors;
+                    tempColorBlock.normalColor = Color.red;
+                    emailObject.FindChild("InputField").GetComponent<InputField>().colors = tempColorBlock;
 					break;
 				}
 			});
@@ -173,23 +187,147 @@ public class LoginControl : MonoBehaviour
     }
 
 
-	bool CheckPassword()
+	public void CheckPassword()
 	{
-		// Do password checking here
-		return true;
+        if(newAccount && !passwordObject.FindChild("InputField").GetComponent<InputField>().text.Equals(""))
+        {
+            validPassword = true;
+            // Check password length
+            if(passwordObject.FindChild("InputField").GetComponent<InputField>().text.Length < 6)
+            {
+                validPassword = false;
+                messageObject.text = "Password must be at least 6 characters long.";
+                messageObject.color = Color.red;
+            }
+            // Check if it contains a letter
+            else if(!Regex.IsMatch(passwordObject.FindChild("InputField").GetComponent<InputField>().text, @"[a-zA-Z]"))
+            {
+                validPassword = false;
+                messageObject.text = "Password must contain a letter.";
+                messageObject.color = Color.red;
+            }
+            // Check if it contains a number
+            else if(!Regex.IsMatch(passwordObject.FindChild("InputField").GetComponent<InputField>().text, @"[0-9]"))
+            {
+                validPassword = false;
+                messageObject.text = "Password must contain a number.";
+                messageObject.color = Color.red;
+            }
+            // Check if it contains a special character
+            else if(Regex.IsMatch(passwordObject.FindChild("InputField").GetComponent<InputField>().text, "^[a-zA-Z0-9 ]*$"))
+            {
+                validPassword = false;
+                messageObject.text = "Password must contain a special character.";
+                messageObject.color = Color.red;
+            }
+
+
+            if(!validPassword)
+            {
+                // Turn password field red
+                tempColorBlock = passwordObject.FindChild("InputField").GetComponent<InputField>().colors;
+                tempColorBlock.normalColor = Color.red;
+                passwordObject.FindChild("InputField").GetComponent<InputField>().colors = tempColorBlock;
+
+            }
+            else
+            {
+                // Turn password field green
+                tempColorBlock = passwordObject.FindChild("InputField").GetComponent<InputField>().colors;
+                tempColorBlock.normalColor = Color.green;
+                passwordObject.FindChild("InputField").GetComponent<InputField>().colors = tempColorBlock;
+            }
+        }
 	}
+
+    public void CheckEqualPasswords()
+    {
+        if(passwordObject.FindChild("InputField").GetComponent<InputField>().text.Equals(confirmPasswordObject.FindChild("InputField").GetComponent<InputField>().text))
+        {
+            // Turn confirm password field green
+            tempColorBlock = confirmPasswordObject.FindChild("InputField").GetComponent<InputField>().colors;
+            tempColorBlock.normalColor = Color.green;
+            confirmPasswordObject.FindChild("InputField").GetComponent<InputField>().colors = tempColorBlock;
+        }
+        else
+        {       
+            if(validPassword)
+            {
+                // Turn confirm password field red
+                tempColorBlock = confirmPasswordObject.FindChild("InputField").GetComponent<InputField>().colors;
+                tempColorBlock.normalColor = Color.red;
+                confirmPasswordObject.FindChild("InputField").GetComponent<InputField>().colors = tempColorBlock;
+
+                messageObject.text = "Passwords must match.";
+                messageObject.color = Color.red;
+            }
+            validPassword = false;
+        }
+    }
+
+	public void ClearPasswordError()
+	{
+		messageObject.text = "";
+        // Turn password field white
+        tempColorBlock = passwordObject.FindChild("InputField").GetComponent<InputField>().colors;
+        tempColorBlock.normalColor = Color.white;
+        passwordObject.FindChild("InputField").GetComponent<InputField>().colors = tempColorBlock;
+        // Turn confirm password field white
+        tempColorBlock = confirmPasswordObject.FindChild("InputField").GetComponent<InputField>().colors;
+        tempColorBlock.normalColor = Color.white;
+        confirmPasswordObject.FindChild("InputField").GetComponent<InputField>().colors = tempColorBlock;
+
+	}
+
+
+	public void CheckScreenName()
+	{
+		if(screenNameObject.FindChild("InputField").GetComponent<InputField>().text.Length < 3) 
+		{
+			messageObject.text = "Screen Name is too short.";
+			messageObject.color = Color.red;
+            tempColorBlock = screenNameObject.FindChild("InputField").GetComponent<InputField>().colors;
+            tempColorBlock.normalColor = Color.red;
+            screenNameObject.FindChild("InputField").GetComponent<InputField>().colors = tempColorBlock;
+			validScreenName = false;
+		} 
+		else 
+		{
+			validScreenName = true;
+		}
+
+	}
+
+	public void ClearScreenNameError()
+	{
+		messageObject.text = "";
+        // Turn screen name field white
+        tempColorBlock = screenNameObject.FindChild("InputField").GetComponent<InputField>().colors;
+        tempColorBlock.normalColor = Color.white;
+        screenNameObject.FindChild("InputField").GetComponent<InputField>().colors = tempColorBlock;
+	}
+
+
+    public void ClearEmailError()
+    {
+        messageObject.text = "";
+        // Turn email field white
+        tempColorBlock = emailObject.FindChild("InputField").GetComponent<InputField>().colors;
+        tempColorBlock.normalColor = Color.white;
+        emailObject.FindChild("InputField").GetComponent<InputField>().colors = tempColorBlock;
+    }
 
 
     public void Login()
     {
-		messageObject.text = "";
 		loginButton.SetActive(false);
 		loginText.SetActive(true);
 		lowerButtonsObject.FindChild("New").GetComponent<Button>().interactable = false;
 
         if(newAccount)
         {
-            if(CheckPassword())
+            CheckEqualPasswords();
+            if(validPassword && validScreenName)
             {
 				Debug.Log("Registering new user with email: "+emailObject.FindChild("InputField").GetComponent<InputField>().text);
 
@@ -220,28 +358,53 @@ public class LoginControl : MonoBehaviour
 						switch(error.Error.GetHashCode())
 						{
 						case 1000:
-							messageObject.text = "Error: Invalid Inputs.";
+                            // Invalid inputs code, All other fields are validated except email 
+                            messageObject.text = "Error: Invalid Email Address.";
 							messageObject.color = Color.red;
+
+                            tempColorBlock = emailObject.FindChild("InputField").GetComponent<InputField>().colors;
+                            tempColorBlock.normalColor = Color.red;
+                            emailObject.FindChild("InputField").GetComponent<InputField>().colors = tempColorBlock;
 							break;
 						case 1006:
 							messageObject.text = "Error: An account with this Email Address has already been created.";
 							messageObject.color = Color.red;
+
+                            tempColorBlock = emailObject.FindChild("InputField").GetComponent<InputField>().colors;
+                            tempColorBlock.normalColor = Color.red;
+                            emailObject.FindChild("InputField").GetComponent<InputField>().colors = tempColorBlock;
 							break;
 						case 1005:
 							messageObject.text = "Error: Invalid Email Address.";
 							messageObject.color = Color.red;
+
+                            tempColorBlock = emailObject.FindChild("InputField").GetComponent<InputField>().colors;
+                            tempColorBlock.normalColor = Color.red;
+                            emailObject.FindChild("InputField").GetComponent<InputField>().colors = tempColorBlock;
 							break;
 						case 1009:
 							messageObject.text = "Error: An account with this Screen Name has already been created.";
 							messageObject.color = Color.red;
+
+                            tempColorBlock = screenNameObject.FindChild("InputField").GetComponent<InputField>().colors;
+                            tempColorBlock.normalColor = Color.red;
+                            screenNameObject.FindChild("InputField").GetComponent<InputField>().colors = tempColorBlock;
 							break;
 						case 1058:
 							messageObject.text = "Error: An account with this Screen Name has already been created.";
 							messageObject.color = Color.red;
+
+                            tempColorBlock = screenNameObject.FindChild("InputField").GetComponent<InputField>().colors;
+                            tempColorBlock.normalColor = Color.red;
+                            screenNameObject.FindChild("InputField").GetComponent<InputField>().colors = tempColorBlock;
 							break;
 						case 1007:
 							messageObject.text = "Error: Invalid Screen Name.";
 							messageObject.color = Color.red;
+
+                            tempColorBlock = screenNameObject.FindChild("InputField").GetComponent<InputField>().colors;
+                            tempColorBlock.normalColor = Color.red;
+                            screenNameObject.FindChild("InputField").GetComponent<InputField>().colors = tempColorBlock;
 							break;
 						case 1008:
 							messageObject.text = "Error: Invalid Password.";
@@ -255,7 +418,6 @@ public class LoginControl : MonoBehaviour
 				loginButton.SetActive(true);
 				loginText.SetActive(false);
 				lowerButtonsObject.FindChild("New").GetComponent<Button>().interactable = true;
-                // Show password requirements
             }
         }
         else
@@ -285,12 +447,16 @@ public class LoginControl : MonoBehaviour
 					switch(error.Error.GetHashCode())
 					{
 					case 1000:
-						messageObject.text = "Error: Invalid Inputs.";
+                        messageObject.text = "Error: Incorrect Email Address or Password.";
 						messageObject.color = Color.red;
 						break;
 					case 1001:
 						messageObject.text = "Error: No account with this email address exists.";
 						messageObject.color = Color.red;
+
+                        tempColorBlock = emailObject.FindChild("InputField").GetComponent<InputField>().colors;
+                        tempColorBlock.normalColor = Color.red;
+                        emailObject.FindChild("InputField").GetComponent<InputField>().colors = tempColorBlock;
 						break;
 					case 1002:
 						messageObject.text = "Error: This account has been banned.";
