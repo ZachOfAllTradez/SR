@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using System.Collections;
 using System.Text.RegularExpressions;
 using PlayFab;
@@ -89,6 +90,20 @@ public class LoginControl : MonoBehaviour
 		{
 			Login();
 		}
+        if (Input.GetKeyDown(KeyCode.Tab))
+        {
+            // Tab through menu fields
+            Selectable next = EventSystem.current.currentSelectedGameObject.GetComponent<Selectable>().FindSelectableOnDown();
+            if (next != null)
+            {
+                InputField nextField = next.GetComponent<InputField>();
+                if (nextField != null)
+                {
+                    nextField.OnPointerClick(new PointerEventData(EventSystem.current));
+                }
+                EventSystem.current.SetSelectedGameObject(next.gameObject, new BaseEventData(EventSystem.current));
+            }
+        }
 	}
 
 
