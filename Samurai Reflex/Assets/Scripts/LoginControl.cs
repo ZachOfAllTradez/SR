@@ -13,6 +13,9 @@ public class LoginControl : MonoBehaviour
     public Transform lowerButtonsObject;
     public Transform passwordTarget;
     public Transform lowerButtonsTarget;
+	public GameObject loginButton;
+	public GameObject loginText;
+	public Text messageObject;
 
     public float expandSpeed = 0.1f;
     public float fadeInSpeed = 0.05f;
@@ -45,12 +48,17 @@ public class LoginControl : MonoBehaviour
         confirmStartAlpha = confirmPasswordText.color.a;
         screenNameImageStartAlpha = screenNameImage.color.a;
         confirmImageStartAlpha = confirmPasswordImage.color.a;
+		loginButton.SetActive(true);
+		loginText.SetActive(false);
 	}
 	
 	// Update is called once per frame
 	void Update() 
 	{
-	
+		if(Input.GetButtonDown("Submit"))
+		{
+			Login();
+		}
 	}
 
 
@@ -85,9 +93,26 @@ public class LoginControl : MonoBehaviour
 	}
 
 
-    public void ForgotPasswordPage()
+    public void ForgotPassword()
     {
-        Application.OpenURL("http://www.alltradesgames.com");
+        //Application.OpenURL("http://www.alltradesgames.com");
+		SendAccountRecoveryEmailRequest request = new SendAccountRecoveryEmailRequest()
+		{
+			TitleId = AccountManager.TITLE_ID,
+			Email = emailObject.FindChild("InputField").GetComponent<InputField>().text,
+		};
+
+		PlayFabClientAPI.SendAccountRecoveryEmail(request, (result) => {					
+			messageObject.text = "Password Recovery Email Sent.";
+			messageObject.color = Color.green;
+		}, 
+			(error) => {						
+				Debug.LogError(error.ErrorMessage+" "+error.HttpCode);
+//				switch(error.HttpCode)
+//				{
+//
+//				}
+			});
     }
 
 
@@ -153,6 +178,9 @@ public class LoginControl : MonoBehaviour
             if(CheckPassword())
             {
 				Debug.Log("Registering new user with email: "+emailObject.FindChild("InputField").GetComponent<InputField>().text);
+				loginButton.SetActive(false);
+				loginText.SetActive(true);
+				lowerButtonsObject.FindChild("New").GetComponent<Button>().interactable = false;
                 RegisterPlayFabUserRequest request = new RegisterPlayFabUserRequest()
                 {
 					TitleId = AccountManager.TITLE_ID,
@@ -169,9 +197,13 @@ public class LoginControl : MonoBehaviour
 					Debug.Log("Returned Session Ticket: "+ AccountManager.SESSION_TICKET);
 					AccountManager.SCREEN_NAME = result.Username;
 					Debug.Log("Returned Screen Name: "+ AccountManager.SCREEN_NAME);
+					loginText.GetComponent<Text>().text = "New Account Created.";
                 }, 
                 (error) => {						
 						Debug.LogError(error.ErrorMessage+" "+error.HttpCode);
+						loginButton.SetActive(true);
+						loginText.SetActive(false);
+						lowerButtonsObject.FindChild("New").GetComponent<Button>().interactable = true;
                 });
             }
             else
@@ -182,6 +214,9 @@ public class LoginControl : MonoBehaviour
         else
         {
 			Debug.Log("Logging in with email: "+emailObject.FindChild("InputField").GetComponent<InputField>().text);
+			loginButton.SetActive(false);
+			loginText.SetActive(true);
+			lowerButtonsObject.FindChild("New").GetComponent<Button>().interactable = false;
 			LoginWithEmailAddressRequest request = new LoginWithEmailAddressRequest()
 			{
 				TitleId = AccountManager.TITLE_ID,
@@ -194,9 +229,13 @@ public class LoginControl : MonoBehaviour
 				Debug.Log("Returned PlayFabId: "+responsePFID);
 				AccountManager.SESSION_TICKET = result.SessionTicket;
 				Debug.Log("Returned Session Ticket: "+ AccountManager.SESSION_TICKET);
+				loginText.GetComponent<Text>().text = "Login Successful.";
 			},
 			(error) => {
 					Debug.LogError(error.ErrorMessage+" "+error.HttpCode);
+					loginButton.SetActive(true);
+					loginText.SetActive(false);
+					lowerButtonsObject.FindChild("New").GetComponent<Button>().interactable = true;
 			});
         }
     }
