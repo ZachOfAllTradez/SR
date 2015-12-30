@@ -17,6 +17,7 @@ public class LoginControl : MonoBehaviour
 	public GameObject loginButton;
 	public GameObject loginText;
 	public Text messageObject;
+    public Toggle emailToggle;
 
     public float expandSpeed = 0.1f;
     public float fadeInSpeed = 0.05f;
@@ -57,6 +58,28 @@ public class LoginControl : MonoBehaviour
 		loginButton.SetActive(true);
 		loginText.SetActive(false);
 		messageObject.text = "";
+
+        if (PlayerPrefs.HasKey("RememberEmail"))
+        {
+            if (PlayerPrefs.GetInt("RememberEmail") == 1)
+            {
+                if (PlayerPrefs.HasKey("Email"))
+                {
+                    //Debug.Log("Loaded email: " + PlayerPrefs.GetString("Email"));
+                    emailObject.FindChild("InputField").GetComponent<InputField>().text = PlayerPrefs.GetString("Email");
+                }
+                emailToggle.isOn = true;
+            }
+            else
+            {
+                emailToggle.isOn = false;
+            }
+        }
+        else
+        {
+            PlayerPrefs.SetInt("RememberEmail", 0);
+            emailToggle.isOn = false;
+        }
 	}
 	
 	// Update is called once per frame
@@ -318,11 +341,33 @@ public class LoginControl : MonoBehaviour
     }
 
 
+    public void CheckToggle()
+    {
+        if (emailToggle.isOn)
+        {
+            //Debug.Log("Toggle on");
+            PlayerPrefs.SetInt("RememberEmail", 1);
+            //Debug.Log("set email as " + emailObject.FindChild("InputField").GetComponent<InputField>().text);
+            PlayerPrefs.SetString("Email", emailObject.FindChild("InputField").GetComponent<InputField>().text);
+        }
+        else
+        {
+            //Debug.Log("Toggle off");
+            PlayerPrefs.SetInt("RememberEmail", 0);
+        }
+    }
+
+
     public void Login()
     {
 		loginButton.SetActive(false);
 		loginText.SetActive(true);
 		lowerButtonsObject.FindChild("New").GetComponent<Button>().interactable = false;
+        // Save email in playerprefs 
+        if (emailToggle.isOn)
+        {
+            PlayerPrefs.SetString("Email", emailObject.FindChild("InputField").GetComponent<InputField>().text);
+        }
 
         if(newAccount)
         {
