@@ -23,6 +23,7 @@ public class AccountManager : MonoBehaviour
 
 	void Awake()
 	{
+        DontDestroyOnLoad(this);
 		PlayFabSettings.TitleId = TITLE_ID;
 	}
 
