@@ -19,6 +19,8 @@ public class AccountManager : MonoBehaviour
     public static int STATSET_1;
     public static int STATSET_2;
 
+    public static LoginControl loginScript;
+
     //private static uint currentDataVersion = 0;
 
 	void Awake()
@@ -30,7 +32,7 @@ public class AccountManager : MonoBehaviour
 	// Use this for initialization
 	void Start()
 	{
-	
+        loginScript = GameObject.FindGameObjectWithTag("LoginController").GetComponent<LoginControl>();
 	}
 	
 	// Update is called once per frame
@@ -69,6 +71,10 @@ public class AccountManager : MonoBehaviour
             {
                 Debug.Log("User data initialized.");
                 //currentDataVersion = result.DataVersion;
+                if(loginScript!=null)
+                {
+                    loginScript.OnLoginSuccessful();
+                }
             },
             (error) =>
             {
@@ -106,6 +112,10 @@ public class AccountManager : MonoBehaviour
                     STATSET_2 = Convert.ToInt32(temp.Value);
 
                     // currentDataVersion = result.DataVersion;
+                    if(loginScript!=null)
+                    {
+                        loginScript.OnLoginSuccessful();
+                    }
                 }, (error) =>
                 {
                     Debug.LogError(error.ErrorMessage + " " + error.Error.GetHashCode());

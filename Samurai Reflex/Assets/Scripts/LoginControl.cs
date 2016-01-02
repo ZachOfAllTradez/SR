@@ -2,6 +2,7 @@
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using System.Collections;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Mail;
 using System.Net.Security;
@@ -20,9 +21,15 @@ public class LoginControl : MonoBehaviour
     public Transform passwordTarget;
     public Transform lowerButtonsTarget;
 	public GameObject loginButton;
-	public GameObject loginText;
 	public Text messageObject;
     public Toggle emailToggle;
+    public Text validationText;
+    public Image validationImage;
+    public Image validationButton;
+    public Image emailToggleImage;
+    public Text emailToggleLabel;
+    public Text forgotText;
+    public Text newAcctText;
 
     public float expandSpeed = 0.1f;
     public float fadeInSpeed = 0.05f;
@@ -47,7 +54,7 @@ public class LoginControl : MonoBehaviour
 	private bool validPassword = false;
 
 	public int validationKeyLength = 10;
-	private string charSet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+	private string charSet = "123456789ABCDEFGHJKLMNOPQRSTUVWXYZ";
 	private string validationKey = "";
 
 
@@ -65,7 +72,7 @@ public class LoginControl : MonoBehaviour
         screenNameImageStartAlpha = screenNameImage.color.a;
         confirmImageStartAlpha = confirmPasswordImage.color.a;
 		loginButton.SetActive(true);
-		loginText.SetActive(false);
+        loginButton.GetComponent<Button>().interactable = true;
 		messageObject.text = "";
 
         if (PlayerPrefs.HasKey("RememberEmail"))
@@ -112,120 +119,7 @@ public class LoginControl : MonoBehaviour
                 EventSystem.current.SetSelectedGameObject(next.gameObject, new BaseEventData(EventSystem.current));
             }
         }
-	}
-
-
-	void SendVerifyEmail()
-	{
-		validationKey = "";
-		Random.seed = (int)System.DateTime.UtcNow.Ticks;
-		//Debug.Log("seed = "+Random.seed);
-        for (int ii = 0; ii < validationKeyLength; ii++)
-        {
-			validationKey += charSet[Random.Range(0, charSet.Length)];            
-        }
-		//Debug.Log("validationKey = " + validationKey);
-
-		MailMessage mail = new MailMessage ();
-		mail.From = new MailAddress("alltradesgames@gmail.com");
-		mail.To.Add(emailObject.FindChild("InputField").GetComponent<InputField>().text);
-		mail.Subject = "AllTrades Games Email Validation Code";
-        mail.Body = "Your one-time validation Key is : </br></br> " + validationKey +"</br></br> Copy this Key and paste it into the 'One-Time Key' field in your game.";
-		mail.IsBodyHtml = true;
-
-		SmtpClient smtpServer = new SmtpClient ("smtp.gmail.com");
-		smtpServer.Port = 587;
-		smtpServer.Credentials = new NetworkCredential ("alltradesgames@gmail.com", "Zondex3102010") as ICredentialsByHost;
-		smtpServer.EnableSsl = true;
-		ServicePointManager.ServerCertificateValidationCallback = delegate(object s, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors) {
-			return true;
-		};
-		smtpServer.Send (mail);
-	}
-
-
-    void ShowEmailKeyInput()
-    {
-        // TODO
-        // Show verification field
-
-
-        messageObject.text = "A verification email with a one-time Key has been sent. Paste the Key into the field above and click 'Verify'";
-    }
-
-
-	public void ToggleNewAccount()
-	{
-		newAccount = !newAccount;
-        if(newAccount)
-        {
-            lowerButtonsObject.FindChild("New/Text").GetComponent<Text>().text = "Back";
-            lowerButtonsObject.FindChild("Login Button/Text").GetComponent<Text>().text = "Create New";
-            screenNameObject.FindChild("InputField").GetComponent<InputField>().interactable = true;
-            confirmPasswordObject.FindChild("InputField").GetComponent<InputField>().interactable = true;
-            StopCoroutine("CollapseForm");
-            StopCoroutine("FadeOutForm");
-            StartCoroutine("ExpandForm");
-            StartCoroutine("FadeInForm");
-        }
-        else
-        {
-			//Debug.Log (screenNameObject.FindChild ("InputField").GetComponent<InputField> ().text);
-            lowerButtonsObject.FindChild("New/Text").GetComponent<Text>().text = "New Account";
-            lowerButtonsObject.FindChild("Login Button/Text").GetComponent<Text>().text = "Login";
-            screenNameObject.FindChild("InputField").GetComponent<InputField>().text = "";
-            confirmPasswordObject.FindChild("InputField").GetComponent<InputField>().text = "";
-            screenNameObject.FindChild("InputField").GetComponent<InputField>().interactable = false;
-            confirmPasswordObject.FindChild("InputField").GetComponent<InputField>().interactable = false;
-            StopCoroutine("ExpandForm");
-            StopCoroutine("FadeInForm");
-            StartCoroutine("CollapseForm");
-            StartCoroutine("FadeOutForm");
-        }
-	}
-
-
-    public void ForgotPassword()
-    {
-        //Application.OpenURL("http://www.alltradesgames.com");
-		messageObject.text = "";
-		SendAccountRecoveryEmailRequest request = new SendAccountRecoveryEmailRequest()
-		{
-			TitleId = AccountManager.TITLE_ID,
-			Email = emailObject.FindChild("InputField").GetComponent<InputField>().text,
-		};
-
-		PlayFabClientAPI.SendAccountRecoveryEmail(request, (result) => {					
-			messageObject.text = "Password Recovery Email Sent From 'PlayFab'.";
-			messageObject.color = Color.green;
-		}, 
-			(error) => {						
-				Debug.LogError(error.ErrorMessage+" "+error.Error.GetHashCode());
-				switch(error.Error.GetHashCode())
-				{
-				case 1000:
-					messageObject.text = "Error: Invalid Email Address.";
-					messageObject.color = Color.red;
-
-                    tempColorBlock = emailObject.FindChild("InputField").GetComponent<InputField>().colors;
-                    tempColorBlock.normalColor = Color.red;
-                    emailObject.FindChild("InputField").GetComponent<InputField>().colors = tempColorBlock;
-					break;
-				case 1001:
-					messageObject.text = "Error: No account with this email address exists.";
-					messageObject.color = Color.red;
-
-                    tempColorBlock = emailObject.FindChild("InputField").GetComponent<InputField>().colors;
-                    tempColorBlock.normalColor = Color.red;
-                    emailObject.FindChild("InputField").GetComponent<InputField>().colors = tempColorBlock;
-					break;
-                case 1123:
-                    messageObject.text = "Error: Cannot connect to server.";
-                    messageObject.color = Color.red;
-                    break;
-				}
-			});
-    }
+	}	
 
 
 	IEnumerator ExpandForm()
@@ -273,6 +167,215 @@ public class LoginControl : MonoBehaviour
             confirmPasswordImage.color = new Color(confirmPasswordImage.color.r, confirmPasswordImage.color.g, confirmPasswordImage.color.b, Mathf.Lerp(confirmPasswordImage.color.a, 0f, fadeOutSpeed));
             yield return null;
         }
+    }
+
+
+    IEnumerator HideAll()
+    {
+        lowerButtonsObject.FindChild("Login Button").gameObject.SetActive(false);
+        while((emailObject.GetComponent<Text>().color.a>0.001f) || (emailObject.FindChild("InputField").GetComponent<Image>().color.a>0.001f))
+        {
+            lowerButtonsObject.FindChild("New").GetComponent<Button>().interactable = false;
+            lowerButtonsObject.FindChild("Forgot").GetComponent<Button>().interactable = false;
+            lowerButtonsObject.FindChild("Login Button").GetComponent<Button>().interactable = false;
+            emailObject.FindChild("InputField").GetComponent<InputField>().interactable = false;
+            emailObject.FindChild("Toggle").GetComponent<Toggle>().interactable = false;
+            passwordObject.FindChild("InputField").GetComponent<InputField>().interactable = false;
+
+            emailObject.FindChild("InputField").GetComponent<InputField>().text = "";
+            screenNameObject.FindChild("InputField").GetComponent<InputField>().text = "";
+            passwordObject.FindChild("InputField").GetComponent<InputField>().text = "";
+            confirmPasswordObject.FindChild("InputField").GetComponent<InputField>().text = "";
+
+            emailObject.GetComponent<Text>().color = new Color(emailObject.GetComponent<Text>().color.r, emailObject.GetComponent<Text>().color.g, emailObject.GetComponent<Text>().color.b, Mathf.Lerp(emailObject.GetComponent<Text>().color.a, 0f, fadeOutSpeed));
+            emailObject.FindChild("InputField").GetComponent<Image>().color = new Color(emailObject.FindChild("InputField").GetComponent<Image>().color.r, emailObject.FindChild("InputField").GetComponent<Image>().color.g, emailObject.FindChild("InputField").GetComponent<Image>().color.b, Mathf.Lerp(emailObject.FindChild("InputField").GetComponent<Image>().color.a, 0f, fadeOutSpeed));
+            passwordObject.GetComponent<Text>().color = new Color(passwordObject.GetComponent<Text>().color.r, passwordObject.GetComponent<Text>().color.g, passwordObject.GetComponent<Text>().color.b, Mathf.Lerp(passwordObject.GetComponent<Text>().color.a, 0f, fadeOutSpeed));
+            passwordObject.FindChild("InputField").GetComponent<Image>().color = new Color(passwordObject.FindChild("InputField").GetComponent<Image>().color.r, passwordObject.FindChild("InputField").GetComponent<Image>().color.g, passwordObject.FindChild("InputField").GetComponent<Image>().color.b, Mathf.Lerp(passwordObject.FindChild("InputField").GetComponent<Image>().color.a, 0f, fadeOutSpeed));
+            emailToggleImage.color = new Color(emailToggleImage.color.r, emailToggleImage.color.g, emailToggleImage.color.b, Mathf.Lerp(emailToggleImage.color.a, 0f, fadeOutSpeed));
+            emailToggleLabel.color = new Color(emailToggleLabel.color.r, emailToggleLabel.color.g, emailToggleLabel.color.b, Mathf.Lerp(emailToggleLabel.color.a, 0f, fadeOutSpeed));
+            forgotText.color = new Color(forgotText.color.r, forgotText.color.g, forgotText.color.b, Mathf.Lerp(forgotText.color.a, 0f, fadeOutSpeed));
+            newAcctText.color = new Color(newAcctText.color.r, newAcctText.color.g, newAcctText.color.b, Mathf.Lerp(newAcctText.color.a, 0f, fadeOutSpeed));
+
+            screenNameText.color = new Color(screenNameText.color.r, screenNameText.color.g, screenNameText.color.b, Mathf.Lerp(screenNameText.color.a, 0f, fadeOutSpeed));
+            screenNameImage.color = new Color(screenNameImage.color.r, screenNameImage.color.g, screenNameImage.color.b, Mathf.Lerp(screenNameImage.color.a, 0f, fadeOutSpeed));
+            confirmPasswordText.color = new Color(confirmPasswordText.color.r, confirmPasswordText.color.g, confirmPasswordText.color.b, Mathf.Lerp(confirmPasswordText.color.a, 0f, fadeOutSpeed));
+            confirmPasswordImage.color = new Color(confirmPasswordImage.color.r, confirmPasswordImage.color.g, confirmPasswordImage.color.b, Mathf.Lerp(confirmPasswordImage.color.a, 0f, fadeOutSpeed));
+            yield return null;
+        }
+    }
+
+
+    IEnumerator HideAllShowKey()
+    {
+        if (newAccount)
+        {
+            StartCoroutine("CollapseForm");
+        }
+        while((emailObject.GetComponent<Text>().color.a>0.001f) || (emailObject.FindChild("InputField").GetComponent<Image>().color.a>0.001f))
+        {
+            lowerButtonsObject.FindChild("New").GetComponent<Button>().interactable = false;
+            lowerButtonsObject.FindChild("Forgot").GetComponent<Button>().interactable = false;
+            lowerButtonsObject.FindChild("Login Button").GetComponent<Button>().interactable = false;
+            emailObject.FindChild("InputField").GetComponent<InputField>().interactable = false;
+            emailObject.FindChild("Toggle").GetComponent<Toggle>().interactable = false;
+            passwordObject.FindChild("InputField").GetComponent<InputField>().interactable = false;
+
+            emailObject.FindChild("InputField").GetComponent<InputField>().text = "";
+            screenNameObject.FindChild("InputField").GetComponent<InputField>().text = "";
+            passwordObject.FindChild("InputField").GetComponent<InputField>().text = "";
+            confirmPasswordObject.FindChild("InputField").GetComponent<InputField>().text = "";
+
+            emailObject.GetComponent<Text>().color = new Color(emailObject.GetComponent<Text>().color.r, emailObject.GetComponent<Text>().color.g, emailObject.GetComponent<Text>().color.b, Mathf.Lerp(emailObject.GetComponent<Text>().color.a, 0f, fadeOutSpeed));
+            emailObject.FindChild("InputField").GetComponent<Image>().color = new Color(emailObject.FindChild("InputField").GetComponent<Image>().color.r, emailObject.FindChild("InputField").GetComponent<Image>().color.g, emailObject.FindChild("InputField").GetComponent<Image>().color.b, Mathf.Lerp(emailObject.FindChild("InputField").GetComponent<Image>().color.a, 0f, fadeOutSpeed));
+            passwordObject.GetComponent<Text>().color = new Color(passwordObject.GetComponent<Text>().color.r, passwordObject.GetComponent<Text>().color.g, passwordObject.GetComponent<Text>().color.b, Mathf.Lerp(passwordObject.GetComponent<Text>().color.a, 0f, fadeOutSpeed));
+            passwordObject.FindChild("InputField").GetComponent<Image>().color = new Color(passwordObject.FindChild("InputField").GetComponent<Image>().color.r, passwordObject.FindChild("InputField").GetComponent<Image>().color.g, passwordObject.FindChild("InputField").GetComponent<Image>().color.b, Mathf.Lerp(passwordObject.FindChild("InputField").GetComponent<Image>().color.a, 0f, fadeOutSpeed));
+            emailToggleImage.color = new Color(emailToggleImage.color.r, emailToggleImage.color.g, emailToggleImage.color.b, Mathf.Lerp(emailToggleImage.color.a, 0f, fadeOutSpeed));
+            emailToggleLabel.color = new Color(emailToggleLabel.color.r, emailToggleLabel.color.g, emailToggleLabel.color.b, Mathf.Lerp(emailToggleLabel.color.a, 0f, fadeOutSpeed));
+            forgotText.color = new Color(forgotText.color.r, forgotText.color.g, forgotText.color.b, Mathf.Lerp(forgotText.color.a, 0f, fadeOutSpeed));
+            newAcctText.color = new Color(newAcctText.color.r, newAcctText.color.g, newAcctText.color.b, Mathf.Lerp(newAcctText.color.a, 0f, fadeOutSpeed));
+
+            screenNameText.color = new Color(screenNameText.color.r, screenNameText.color.g, screenNameText.color.b, Mathf.Lerp(screenNameText.color.a, 0f, fadeOutSpeed));
+            screenNameImage.color = new Color(screenNameImage.color.r, screenNameImage.color.g, screenNameImage.color.b, Mathf.Lerp(screenNameImage.color.a, 0f, fadeOutSpeed));
+            confirmPasswordText.color = new Color(confirmPasswordText.color.r, confirmPasswordText.color.g, confirmPasswordText.color.b, Mathf.Lerp(confirmPasswordText.color.a, 0f, fadeOutSpeed));
+            confirmPasswordImage.color = new Color(confirmPasswordImage.color.r, confirmPasswordImage.color.g, confirmPasswordImage.color.b, Mathf.Lerp(confirmPasswordImage.color.a, 0f, fadeOutSpeed));
+            yield return null;
+        }
+        lowerButtonsObject.FindChild("Login Button").gameObject.SetActive(false);
+        validationText.transform.SetAsLastSibling();
+        StartCoroutine("ShowEmailKeyInput");
+    }
+
+
+    IEnumerator ShowEmailKeyInput()
+    {
+        validationImage.gameObject.GetComponent<InputField>().interactable = true;
+        while(((1f - validationText.color.a)>0.001f) || ((1f - validationImage.color.a)>0.001f))
+        {
+            validationText.color = new Color(validationText.color.r, validationText.color.g, validationText.color.b, Mathf.Lerp(validationText.color.a, 1f, fadeInSpeed));
+            validationImage.color = new Color(validationImage.color.r, validationImage.color.g, validationImage.color.b, Mathf.Lerp(validationImage.color.a, 1f, fadeInSpeed));
+            validationButton.color = new Color(validationButton.color.r, validationButton.color.g, validationButton.color.b, Mathf.Lerp(validationButton.color.a, 1f, fadeInSpeed));
+            yield return null;
+        }
+        messageObject.text = "A verification email with a One-Time Key has been sent. Paste the Key into the field above and click 'Verify'.";
+        messageObject.color = Color.green;
+    }
+
+
+    IEnumerator HideEmailKeyInput()
+    {
+        validationImage.gameObject.GetComponent<InputField>().text = "";
+        validationImage.gameObject.GetComponent<InputField>().interactable = false;
+        while((validationText.color.a>0.001f) || (validationImage.color.a>0.001f))
+        {
+            validationText.color = new Color(validationText.color.r, validationText.color.g, validationText.color.b, Mathf.Lerp(validationText.color.a, 0f, fadeInSpeed/2f));
+            validationImage.color = new Color(validationImage.color.r, validationImage.color.g, validationImage.color.b, Mathf.Lerp(validationImage.color.a, 0f, fadeInSpeed/2f));
+            validationButton.color = new Color(validationButton.color.r, validationButton.color.g, validationButton.color.b, Mathf.Lerp(validationButton.color.a, 0f, fadeInSpeed/2f));
+            yield return null;
+        }
+        messageObject.text = "";
+    }
+
+
+    void SendVerifyEmail()
+    {
+        validationKey = "";
+        Random.seed = (int)System.DateTime.UtcNow.Ticks;
+        //Debug.Log("seed = "+Random.seed);
+        for (int ii = 0; ii < validationKeyLength; ii++)
+        {
+            validationKey += charSet[Random.Range(0, charSet.Length)];            
+        }
+        //Debug.Log("validationKey = " + validationKey);
+
+        MailMessage mail = new MailMessage ();
+        mail.From = new MailAddress("alltradesgames@gmail.com");
+        mail.To.Add(emailObject.FindChild("InputField").GetComponent<InputField>().text);
+        mail.Subject = "AllTrades Games Email Validation Code";
+        mail.Body = "Your one-time validation Key is : </br></br> " + validationKey +"</br></br> Copy this Key and paste it into the 'One-Time Key' field in your game.";
+        mail.IsBodyHtml = true;
+
+        SmtpClient smtpServer = new SmtpClient ("smtp.gmail.com");
+        smtpServer.Port = 587;
+        smtpServer.Credentials = new NetworkCredential ("alltradesgames@gmail.com", "Zondex3102010") as ICredentialsByHost;
+        smtpServer.EnableSsl = true;
+        ServicePointManager.ServerCertificateValidationCallback = delegate(object s, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors) {
+            return true;
+        };
+        smtpServer.Send (mail);
+    }
+
+
+    public void ToggleNewAccount()
+    {
+        newAccount = !newAccount;
+        if(newAccount)
+        {
+            lowerButtonsObject.FindChild("New/Text").GetComponent<Text>().text = "Back";
+            lowerButtonsObject.FindChild("Login Button/Text").GetComponent<Text>().text = "Create New";
+            screenNameObject.FindChild("InputField").GetComponent<InputField>().interactable = true;
+            confirmPasswordObject.FindChild("InputField").GetComponent<InputField>().interactable = true;
+            StopCoroutine("CollapseForm");
+            StopCoroutine("FadeOutForm");
+            StartCoroutine("ExpandForm");
+            StartCoroutine("FadeInForm");
+        }
+        else
+        {
+            //Debug.Log (screenNameObject.FindChild ("InputField").GetComponent<InputField> ().text);
+            lowerButtonsObject.FindChild("New/Text").GetComponent<Text>().text = "New Account";
+            lowerButtonsObject.FindChild("Login Button/Text").GetComponent<Text>().text = "Login";
+            screenNameObject.FindChild("InputField").GetComponent<InputField>().text = "";
+            confirmPasswordObject.FindChild("InputField").GetComponent<InputField>().text = "";
+            screenNameObject.FindChild("InputField").GetComponent<InputField>().interactable = false;
+            confirmPasswordObject.FindChild("InputField").GetComponent<InputField>().interactable = false;
+            StopCoroutine("ExpandForm");
+            StopCoroutine("FadeInForm");
+            StartCoroutine("CollapseForm");
+            StartCoroutine("FadeOutForm");
+        }
+    }
+
+
+    public void ForgotPassword()
+    {
+        //Application.OpenURL("http://www.alltradesgames.com");
+        messageObject.text = "";
+        SendAccountRecoveryEmailRequest request = new SendAccountRecoveryEmailRequest()
+            {
+                TitleId = AccountManager.TITLE_ID,
+                Email = emailObject.FindChild("InputField").GetComponent<InputField>().text,
+            };
+
+        PlayFabClientAPI.SendAccountRecoveryEmail(request, (result) => {                    
+            messageObject.text = "Password Recovery Email Sent From 'PlayFab'.";
+            messageObject.color = Color.green;
+        }, 
+            (error) => {                        
+            Debug.LogError(error.ErrorMessage+" "+error.Error.GetHashCode());
+            switch(error.Error.GetHashCode())
+            {
+                case 1000:
+                    messageObject.text = "Error: Invalid Email Address.";
+                    messageObject.color = Color.red;
+
+                    tempColorBlock = emailObject.FindChild("InputField").GetComponent<InputField>().colors;
+                    tempColorBlock.normalColor = Color.red;
+                    emailObject.FindChild("InputField").GetComponent<InputField>().colors = tempColorBlock;
+                    break;
+                case 1001:
+                    messageObject.text = "Error: No account with this email address exists.";
+                    messageObject.color = Color.red;
+
+                    tempColorBlock = emailObject.FindChild("InputField").GetComponent<InputField>().colors;
+                    tempColorBlock.normalColor = Color.red;
+                    emailObject.FindChild("InputField").GetComponent<InputField>().colors = tempColorBlock;
+                    break;
+                case 1123:
+                    messageObject.text = "Error: Cannot connect to server.";
+                    messageObject.color = Color.red;
+                    break;
+            }
+        });
     }
 
 
@@ -426,8 +529,7 @@ public class LoginControl : MonoBehaviour
 
     public void Login()
     {
-		loginButton.SetActive(false);
-		loginText.SetActive(true);
+        loginButton.GetComponent<Button>().interactable = false;
 		lowerButtonsObject.FindChild("New").GetComponent<Button>().interactable = false;
         // Save email in playerprefs 
         if (emailToggle.isOn)
@@ -440,6 +542,8 @@ public class LoginControl : MonoBehaviour
             CheckEqualPasswords();
             if(validPassword && validScreenName)
             {
+                messageObject.text = "Connecting . . .";
+                messageObject.color = Color.white;
 				Debug.Log("Registering new user with email: "+emailObject.FindChild("InputField").GetComponent<InputField>().text);
 
                 RegisterPlayFabUserRequest request = new RegisterPlayFabUserRequest()
@@ -460,14 +564,13 @@ public class LoginControl : MonoBehaviour
 					Debug.Log("Returned Screen Name: "+ AccountManager.SCREEN_NAME);
 
                     // New account created
-					loginText.GetComponent<Text>().text = "New Account Created.";
+                    messageObject.text = "New Account Created.";
+                    messageObject.color = Color.white;
                     AccountManager.InitializePlayerData();
-                    OnLoginSuccessful();
                 }, 
                 (error) => {						
 						Debug.LogError(error.ErrorMessage+" "+error.Error.GetHashCode());
-						loginButton.SetActive(true);
-						loginText.SetActive(false);
+                        loginButton.GetComponent<Button>().interactable = true;
 						lowerButtonsObject.FindChild("New").GetComponent<Button>().interactable = true;
 
 						switch(error.Error.GetHashCode())
@@ -534,13 +637,14 @@ public class LoginControl : MonoBehaviour
             }
             else
             {
-				loginButton.SetActive(true);
-				loginText.SetActive(false);
+                loginButton.GetComponent<Button>().interactable = true;
 				lowerButtonsObject.FindChild("New").GetComponent<Button>().interactable = true;
             }
         }
         else
         {
+            messageObject.text = "Connecting . . .";
+            messageObject.color = Color.white;
 			Debug.Log("Logging in with email: "+emailObject.FindChild("InputField").GetComponent<InputField>().text);
 
 			LoginWithEmailAddressRequest request = new LoginWithEmailAddressRequest()
@@ -557,14 +661,13 @@ public class LoginControl : MonoBehaviour
 				Debug.Log("Returned Session Ticket: "+ AccountManager.SESSION_TICKET);
 
                 // Login successful
-				loginText.GetComponent<Text>().text = "Login Successful.";
+                messageObject.text = "Login Successful.";
+                messageObject.color = Color.white;
                 AccountManager.DownloadPlayerData();
-                OnLoginSuccessful();
 			},
 			(error) => {
 					Debug.LogError(error.ErrorMessage+" "+error.Error.GetHashCode());
-					loginButton.SetActive(true);
-					loginText.SetActive(false);
+                    loginButton.GetComponent<Button>().interactable = true;
 					lowerButtonsObject.FindChild("New").GetComponent<Button>().interactable = true;
 
 					switch(error.Error.GetHashCode())
@@ -599,29 +702,47 @@ public class LoginControl : MonoBehaviour
     }
 
 
-    void OnLoginSuccessful()
+    public void OnLoginSuccessful()
     {
         // Send verify email address if neccessary
         if (!AccountManager.EMAIL_VERIFIED)
         {
             SendVerifyEmail();
-            ShowEmailKeyInput();
+            StartCoroutine("HideAllShowKey");
         }
         else
         {
             // Start Game
             //TODO
+            Debug.Log("Start Game");
+            StartCoroutine("HideAll");
         }
     }
 
 
     public void SubmitEmailKey()
     {
-        // TODO
         // Compare key input text to stored key
+        if (validationImage.gameObject.GetComponent<InputField>().text.ToUpper().Equals(validationKey))
+        {            
+            AccountManager.EMAIL_VERIFIED = true;
+            List<string> list = new List<string>();
+            list.Add("emailVerified");
+            AccountManager.UploadPlayerData(list);
 
-        //AccountManager.EMAIL_VERIFIED = true;
+            messageObject.text = "Validation successful.";
+            messageObject.color = Color.green;
 
+            // Start Game
+            //TODO
+            Debug.Log("Start Game");
+            StartCoroutine("HideEmailKeyInput");
+        }
+        else
+        {
+            messageObject.text = "Incorrect validation Key. Please try again.";
+            messageObject.color = Color.red;
+        }
     }
 
 
