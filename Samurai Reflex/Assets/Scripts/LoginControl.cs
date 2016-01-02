@@ -2,6 +2,10 @@
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using System.Collections;
+using System.Net;
+using System.Net.Mail;
+using System.Net.Security;
+using System.Security.Cryptography.X509Certificates;
 using System.Text.RegularExpressions;
 using PlayFab;
 using PlayFab.ClientModels;
@@ -41,6 +45,10 @@ public class LoginControl : MonoBehaviour
 
 	private bool validScreenName = false;
 	private bool validPassword = false;
+
+	public int validationKeyLength = 10;
+	private string charSet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+	private string validationKey = "";
 
 
 	// Use this for initialization
@@ -105,6 +113,45 @@ public class LoginControl : MonoBehaviour
             }
         }
 	}
+
+
+	void SendVerifyEmail()
+	{
+		validationKey = "";
+		Random.seed = (int)System.DateTime.UtcNow.Ticks;
+		//Debug.Log("seed = "+Random.seed);
+        for (int ii = 0; ii < validationKeyLength; ii++)
+        {
+			validationKey += charSet[Random.Range(0, charSet.Length)];            
+        }
+		//Debug.Log("validationKey = " + validationKey);
+
+		MailMessage mail = new MailMessage ();
+		mail.From = new MailAddress("alltradesgames@gmail.com");
+		mail.To.Add(emailObject.FindChild("InputField").GetComponent<InputField>().text);
+		mail.Subject = "AllTrades Games Email Validation Code";
+        mail.Body = "Your one-time validation Key is : </br></br> " + validationKey +"</br></br> Copy this Key and paste it into the 'One-Time Key' field in your game.";
+		mail.IsBodyHtml = true;
+
+		SmtpClient smtpServer = new SmtpClient ("smtp.gmail.com");
+		smtpServer.Port = 587;
+		smtpServer.Credentials = new NetworkCredential ("alltradesgames@gmail.com", "Zondex3102010") as ICredentialsByHost;
+		smtpServer.EnableSsl = true;
+		ServicePointManager.ServerCertificateValidationCallback = delegate(object s, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors) {
+			return true;
+		};
+		smtpServer.Send (mail);
+	}
+
+
+    void ShowEmailKeyInput()
+    {
+        // TODO
+        // Show verification field
+
+
+        messageObject.text = "A verification email with a one-time Key has been sent. Paste the Key into the field above and click 'Verify'";
+    }
 
 
 	public void ToggleNewAccount()
@@ -411,7 +458,11 @@ public class LoginControl : MonoBehaviour
 					Debug.Log("Returned Session Ticket: "+ AccountManager.SESSION_TICKET);
 					AccountManager.SCREEN_NAME = result.Username;
 					Debug.Log("Returned Screen Name: "+ AccountManager.SCREEN_NAME);
+
+                    // New account created
 					loginText.GetComponent<Text>().text = "New Account Created.";
+                    AccountManager.InitializePlayerData();
+                    OnLoginSuccessful();
                 }, 
                 (error) => {						
 						Debug.LogError(error.ErrorMessage+" "+error.Error.GetHashCode());
@@ -504,7 +555,11 @@ public class LoginControl : MonoBehaviour
 				Debug.Log("Returned PlayFabId: "+responsePFID);
 				AccountManager.SESSION_TICKET = result.SessionTicket;
 				Debug.Log("Returned Session Ticket: "+ AccountManager.SESSION_TICKET);
+
+                // Login successful
 				loginText.GetComponent<Text>().text = "Login Successful.";
+                AccountManager.DownloadPlayerData();
+                OnLoginSuccessful();
 			},
 			(error) => {
 					Debug.LogError(error.ErrorMessage+" "+error.Error.GetHashCode());
@@ -543,6 +598,31 @@ public class LoginControl : MonoBehaviour
         }
     }
 
+
+    void OnLoginSuccessful()
+    {
+        // Send verify email address if neccessary
+        if (!AccountManager.EMAIL_VERIFIED)
+        {
+            SendVerifyEmail();
+            ShowEmailKeyInput();
+        }
+        else
+        {
+            // Start Game
+            //TODO
+        }
+    }
+
+
+    public void SubmitEmailKey()
+    {
+        // TODO
+        // Compare key input text to stored key
+
+        //AccountManager.EMAIL_VERIFIED = true;
+
+    }
 
 
 }
