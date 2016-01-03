@@ -13,6 +13,8 @@ using PlayFab.ClientModels;
 
 public class LoginControl : MonoBehaviour
 {
+	public int passwordLevel = 3; //1 = only > 6 chars, 2 = must contain a # and a letter, 3 = must also contain a special character
+	
     public Transform emailObject;
     public Transform screenNameObject;
     public Transform passwordObject;
@@ -391,27 +393,33 @@ public class LoginControl : MonoBehaviour
                 messageObject.text = "Password must be at least 6 characters long.";
                 messageObject.color = Color.red;
             }
-            // Check if it contains a letter
-            else if(!Regex.IsMatch(passwordObject.FindChild("InputField").GetComponent<InputField>().text, @"[a-zA-Z]"))
-            {
-                validPassword = false;
-                messageObject.text = "Password must contain a letter.";
-                messageObject.color = Color.red;
-            }
-            // Check if it contains a number
-            else if(!Regex.IsMatch(passwordObject.FindChild("InputField").GetComponent<InputField>().text, @"[0-9]"))
-            {
-                validPassword = false;
-                messageObject.text = "Password must contain a number.";
-                messageObject.color = Color.red;
-            }
-            // Check if it contains a special character
-            else if(Regex.IsMatch(passwordObject.FindChild("InputField").GetComponent<InputField>().text, "^[a-zA-Z0-9 ]*$"))
-            {
-                validPassword = false;
-                messageObject.text = "Password must contain a special character.";
-                messageObject.color = Color.red;
-            }
+			if(passwordLevel > 1)
+			{
+	            // Check if it contains a letter
+	            if(!Regex.IsMatch(passwordObject.FindChild("InputField").GetComponent<InputField>().text, @"[a-zA-Z]"))
+	            {
+	                validPassword = false;
+	                messageObject.text = "Password must contain a letter.";
+	                messageObject.color = Color.red;
+	            }
+	            // Check if it contains a number
+	            if(!Regex.IsMatch(passwordObject.FindChild("InputField").GetComponent<InputField>().text, @"[0-9]"))
+	            {
+	                validPassword = false;
+	                messageObject.text = "Password must contain a number.";
+	                messageObject.color = Color.red;
+	            }
+				if(passwordLevel > 2)
+				{
+		            // Check if it contains a special character
+		            if(Regex.IsMatch(passwordObject.FindChild("InputField").GetComponent<InputField>().text, "^[a-zA-Z0-9 ]*$"))
+		            {
+		                validPassword = false;
+		                messageObject.text = "Password must contain a special character.";
+		                messageObject.color = Color.red;
+		            }
+				}
+			}
 
 
             if(!validPassword)
